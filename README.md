@@ -6,15 +6,15 @@ It currently exists as an early x86 kernel, booted by GRUB using the Multiboot s
 
 ## Status
 
-**v0.1: boots and halts.** GRUB loads the kernel at 1 MiB, jumps to `_start`, and the kernel disables interrupts and halts the CPU. There is no output yet.
+**v0.2: boots and shows text.** GRUB loads the kernel at 1 MiB, jumps to `_start`, and the kernel disables interrupts and calls kernel_main which writes to vga and then halts the CPU. There is simple text output.
 
 ## Roadmap
 
 - [x] Multiboot header and entry point (`boot.asm`)
 - [x] Linker script that loads the kernel at 1 MiB (`linker.ld`)
 - [x] Bootable ISO that runs in QEMU
-- [ ] Set up a stack and call `kernel_main` in C
-- [ ] Print to the VGA text buffer (`0xB8000`)
+- [x] Set up a stack and call `kernel_main` in C
+- [x] Print to the VGA text buffer (`0xB8000`)
 - [ ] GDT (Global Descriptor Table)
 - [ ] IDT and interrupt handling (exceptions, keyboard)
 - [ ] Memory management (physical memory manager, allocator)
@@ -29,13 +29,15 @@ It currently exists as an early x86 kernel, booted by GRUB using the Multiboot s
 2. GRUB reads `/boot/grub/grub.cfg` and loads `/boot/kernel.elf`.
 3. GRUB scans the first 8 KiB of the kernel for the Multiboot header (magic number `0x1BADB002`, flags, and a checksum so that all three add up to 0).
 4. GRUB switches the CPU to 32-bit protected mode and jumps to `_start`.
-5. `_start` runs `cli` (no interrupts) and loops on `hlt`.
+5. `_start` runs `cli` (no interrupts) and calls kernel_main.
+6. kernel_main prints to the vga text buffer and then hlts in a loop.
 
 ## Project layout
 
 ```
 boot.asm      Multiboot header and entry point (NASM)
-linker.ld     Linker script: places the kernel at 0x100000
+kernel.c      The kernel's code (currently prints text to the screen)
+linker.ld     Linker script: places the kernel at 0x100000 and links boot.asm and kernel.c
 grub.cfg      GRUB menu entry that loads the kernel
 ```
 
@@ -52,24 +54,8 @@ sudo pacman -S nasm qemu-system-x86 grub xorriso mtools
 Build and run:
 
 ```
-# 1. Assemble to a 32-bit ELF object file
-nasm -f elf32 boot.asm -o boot.o
-
-# 2. Link using our script (32-bit ELF output)
-ld -m elf_i386 -T linker.ld -o kernel.elf boot.o
-
-# 3. Check that the Multiboot header is valid
-grub-file --is-x86-multiboot kernel.elf && echo "valid multiboot"
-
-# 4. Lay out the disc contents
-mkdir -p isodir/boot/grub
-cp kernel.elf isodir/boot/kernel.elf
-cp grub.cfg isodir/boot/grub/grub.cfg
-
-# 5. Build a bootable ISO
-grub-mkrescue -o kamelos.iso isodir
-
-# 6. Boot it in QEMU
+# 1. Run make and it makes the build for you
+# 2. Boot it in QEMU
 qemu-system-i386 -cdrom kamelos.iso
 ```
 
