@@ -1,8 +1,8 @@
 # kamelOS
 
-A 32-bit x86 kernel written from scratch in C and NASM assembly, booted by GRUB using the Multiboot specification.
+kamelOS is an operating system built from scratch in C and assembly. The goal is a usable OS that can run ported software.
 
-kamelOS is a learning project. The goal is to understand every layer between the power button and a running program, so each piece (toolchain, linker script, boot code) is written and understood by hand rather than copied.
+It currently exists as an early x86 kernel, booted by GRUB using the Multiboot specification. It starts in 32-bit mode, and 64-bit support is planned.
 
 ## Status
 
@@ -81,4 +81,4 @@ It follows `kamelib`, the mini standard library this project grew out of.
 
 ## License
 
-To be decided.
+[MIT](LICENSE)
